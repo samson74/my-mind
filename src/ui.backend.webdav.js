@@ -53,8 +53,8 @@ MM.UI.Backend.WebDAV._load = function(url) {
 	this._current = url;
 	MM.App.setThrobber(true);
 
-	var lastIndex = url.lastIndexOf("/");
-	this._url.value = url.substring(0, lastIndex);
+	/*var lastIndex = url.lastIndexOf("/");
+	this._url.value = url.substring(0, lastIndex);*/
 	localStorage.setItem(this._prefix + "url", this._url.value);
 
 	this._backend.load(url).then(
