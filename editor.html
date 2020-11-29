@@ -15,12 +15,13 @@
 <body>
     <div id="notes-content"></div>
     <script>
-
+        const { ipcRenderer } = require('electron');
         var sendMessage = function(action, value) {
-            window.parent.postMessage({
+            ipcRenderer.sendToHost(action,value);
+            /*window.parent.postMessage({
                 action: action,
                 value: value
-            }, '*');
+            }, '*');*/
         };
 
         window.addEventListener("message", function(e) {
