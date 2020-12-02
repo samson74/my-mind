@@ -1,11 +1,10 @@
 {
   "name": "my-mind",
   "version": "1.0.0",
-  "description": "A minimal Electron application",
+  "description": "My Mind is a web application for creating and managing Mind maps.",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "packager": "electron-packager ./ testapp --win --out ./outputs"
+    "start": "electron ."
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -19,9 +18,8 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^11.0.1",
-    "electron-packager": "^15.1.0"
+    "asar": "^3.0.3"
   },
   "dependencies": {
-    "asar": "^3.0.3"
   }
 }
