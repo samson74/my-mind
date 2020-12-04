@@ -61,6 +61,9 @@ my-mind.js: $(SOURCES)
 	@echo "/* My Mind web app: all source files combined. */" > $@
 	@cat $^ >> $@
 
+pack:
+	asar pack . out/app.asar
+
 push:
 	@hg bookmark -f master
 	@hg push ; true
@@ -68,3 +71,4 @@ push:
 
 clean:
 	@rm my-mind.js
+	@rm -rf out

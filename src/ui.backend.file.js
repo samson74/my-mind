@@ -72,6 +72,7 @@ MM.UI.Backend.File.load = function() {
 MM.UI.Backend.File._loadDone = function(data) {
 	try {
 		var format = MM.Format.getByName(data.name) || MM.Format.JSON;
+		this._format.value = format.id;
 		var json = format.from(data.data);
 		//localStorage.setItem(this._prefix + "filepath", data.name);
 		this._filePath = data.name;
