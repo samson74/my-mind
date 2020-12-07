@@ -1006,7 +1006,7 @@
 
 		<div id="notes" class="ui">
 			<h3>Topic Notes</h3>
-			<webview id="notes-editor" sandbox="allow-scripts" nodeintegration="true" src="editor.html"></webview>
+			<iframe id="notes-editor" sandbox="allow-scripts allow-same-origin" src="editor.html"></iframe>
 		</div>
 		
 		<div id="menu">
@@ -1044,16 +1044,9 @@
 					}
 				};
 				
-				const webview = document.querySelector('webview')
 				/*webview.addEventListener('dom-ready', () => {
 					webview.openDevTools();
 				});*/
-				webview.addEventListener('ipc-message', (event) => {
-					window.postMessage({
-									action: event.channel,
-									value: event.args[0]
-								}, '*');
-				});
 
 			}
 		</script>

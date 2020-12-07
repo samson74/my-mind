@@ -9,7 +9,6 @@ function createWindow () {
     height: 768,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      webviewTag: true,
       nodeIntegration: true,
       enableRemoteModule: true
     }
