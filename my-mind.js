@@ -5115,7 +5115,10 @@ MM.Mouse.handleEvent = function(e) {
 				}
 			}
 			if (dir) {
-				MM.App.adjustFontSize(dir);
+				if(e.ctrlKey)
+					MM.App.adjustFontSize(dir);
+				else
+					MM.App.map.moveBy(0, 0-e.deltaY);
 			}
 		break;
 	}
