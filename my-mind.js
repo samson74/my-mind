@@ -3408,8 +3408,6 @@ MM.Backend.Image.save = function(data, name) {
 	form.submit();
 	form.parentNode.removeChild(form);
 }
-const { dialog } = require('electron').remote;
-
 MM.Backend.File = Object.create(MM.Backend, {
 	id: {value: "file"},
 	label: {value: "File"},
@@ -3417,21 +3415,25 @@ MM.Backend.File = Object.create(MM.Backend, {
 });
 
 MM.Backend.File.save = function(data, name) {
-	/*var link = document.createElement("a");
-	link.download = name;
-	link.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
-	document.body.appendChild(link);
-	link.click();
-	link.parentNode.removeChild(link);*/
 	var promise = new Promise();
 
-	var fs = require('fs');
-	fs.writeFile(name, data, 'utf8', (err)=>{
-		if(err) 
-			promise.reject(err);
-		else
-			promise.fulfill({filePath:name});
-	});
+	if(MM.App.electronVer){
+		var fs = require('fs');
+		fs.writeFile(name, data, 'utf8', (err)=>{
+			if(err) 
+				promise.reject(err);
+			else
+				promise.fulfill({filePath:name});
+		});
+	}
+	else{
+		var link = document.createElement("a");
+		link.download = name;
+		link.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
+		document.body.appendChild(link);
+		link.click();
+		link.parentNode.removeChild(link);
+	}
 
 	return promise;
 }
@@ -3439,41 +3441,46 @@ MM.Backend.File.save = function(data, name) {
 MM.Backend.File.load = function() {
 	var promise = new Promise();
 
-	this.input.type = "file";
+	if(MM.App.electronVer){
+		const { dialog } = require('electron').remote;
+		var files = dialog.showOpenDialogSync({
+			properties: ['openFile'],
+			filters: [
+				{ name: 'my-mind', extensions: ['mymind'] },
+				{ name: 'FreeMind', extensions: ['mm'] },
+				{ name: 'Mind Map Architect', extensions: ['mma'] },
+				{ name: 'MindMup', extensions: ['mup'] },
+				{ name: 'Plain Text', extensions: ['txt'] },
+				{ name: 'All support files', extensions: ['mymind','mm','mma','mup','txt'] },
+				{ name: 'All Files', extensions: ['*'] }
+		]
+		});
+		if (!files) { return; }
+		var file = files[0];
+		
+		var fs = require('fs');
+		fs.readFile(file,'utf8',function(err,buffer){
+			if(err)
+				{ promise.reject(reader.error); }
+			else
+				promise.fulfill({data:buffer, name:file});
+		});
+	}
+	else{
+		this.input.type = "file";
 
-	/*this.input.onchange = function(e) {
-		var file = e.target.files[0];
-		if (!file) { return; }
-
-		var reader = new FileReader();
-		reader.onload = function() { promise.fulfill({data:reader.result, name:file.name}); }
-		reader.onerror = function() { promise.reject(reader.error); }
-		reader.readAsText(file);
-	}.bind(this);
-
-	this.input.click();*/
-	var files = dialog.showOpenDialogSync({
-		properties: ['openFile'],
-		filters: [
-			{ name: 'my-mind', extensions: ['mymind'] },
-			{ name: 'FreeMind', extensions: ['mm'] },
-			{ name: 'Mind Map Architect', extensions: ['mma'] },
-			{ name: 'MindMup', extensions: ['mup'] },
-			{ name: 'Plain Text', extensions: ['txt'] },
-			{ name: 'All support files', extensions: ['mymind','mm','mma','mup','txt'] },
-			{ name: 'All Files', extensions: ['*'] }
-	  ]
-	  });
-	  if (!files) { return; }
-	  var file = files[0];
+		this.input.onchange = function(e) {
+			var file = e.target.files[0];
+			if (!file) { return; }
 	
-	  var fs = require('fs');
-	  fs.readFile(file,'utf8',function(err,buffer){
-		if(err)
-			{ promise.reject(reader.error); }
-		else
-			promise.fulfill({data:buffer, name:file});
-	  });
+			var reader = new FileReader();
+			reader.onload = function() { promise.fulfill({data:reader.result, name:file.name}); }
+			reader.onerror = function() { promise.reject(reader.error); }
+			reader.readAsText(file);
+		}.bind(this);
+	
+		this.input.click();	
+	}
 
 	return promise;
 }
@@ -4500,7 +4507,6 @@ MM.UI.Backend.File.init = function(select) {
 	this._format.appendChild(MM.Format.Mup.buildOption());
 	this._format.appendChild(MM.Format.Plaintext.buildOption());
 	this._format.value = localStorage.getItem(this._prefix + "format") || MM.Format.JSON.id;
-	//localStorage.setItem(this._prefix + "filepath", "");
 	this._filePath = "";//保存文件路径名
 }
 
@@ -4521,29 +4527,33 @@ MM.UI.Backend.File.save = function() {
 	var json = MM.App.map.toJSON();
 	var data = format.to(json);
 
-	var name = this._filePath || "";//localStorage.getItem(this._prefix + "filepath") || "";
-	if(name === "" || this._mode === "save"){
-		name = MM.App.map.getName() + "." + format.extension;
-		var filePath = dialog.showSaveDialogSync({
-			defaultPath: name,
-			properties: ['showOverwriteConfirmation'],
-			filters: [
-				{ name: 'my-mind', extensions: ['mymind'] },
-				{ name: 'FreeMind', extensions: ['mm'] },
-				{ name: 'Mind Map Architect', extensions: ['mma'] },
-				{ name: 'MindMup', extensions: ['mup'] },
-				{ name: 'Plain Text', extensions: ['txt'] },
-				{ name: 'All Files', extensions: ['*'] }
-				]
-			});
-			if (!filePath) 
-			{ 
-				this._mode = "";
-				MM.App.io.hide();
-				return; }
-			name = filePath;	
+	if(MM.App.electronVer){
+		const { dialog } = require('electron').remote;
+		var name = this._filePath || "";
+		if(name === "" || this._mode === "save"){
+			name = MM.App.map.getName() + "." + format.extension;
+			var filePath = dialog.showSaveDialogSync({
+				defaultPath: name,
+				properties: ['showOverwriteConfirmation'],
+				filters: [
+					{ name: 'my-mind', extensions: ['mymind'] },
+					{ name: 'FreeMind', extensions: ['mm'] },
+					{ name: 'Mind Map Architect', extensions: ['mma'] },
+					{ name: 'MindMup', extensions: ['mup'] },
+					{ name: 'Plain Text', extensions: ['txt'] },
+					{ name: 'All Files', extensions: ['*'] }
+					]
+				});
+				if (!filePath) 
+				{ 
+					this._mode = "";
+					MM.App.io.hide();
+					return; }
+				name = filePath;	
+		}
 	}
-	//name = MM.App.map.getName() + "." + format.extension;
+	else
+		name = MM.App.map.getName() + "." + format.extension;
 	this._backend.save(data, name).then(
 		this._saveDone.bind(this),
 		this._error.bind(this)
@@ -4562,8 +4572,8 @@ MM.UI.Backend.File._loadDone = function(data) {
 		var format = MM.Format.getByName(data.name) || MM.Format.JSON;
 		this._format.value = format.id;
 		var json = format.from(data.data);
-		//localStorage.setItem(this._prefix + "filepath", data.name);
-		this._filePath = data.name;
+		if(MM.App.electronVer)
+			this._filePath = data.name;
 	} catch (e) { 
 		this._error(e);
 	}
@@ -4572,7 +4582,8 @@ MM.UI.Backend.File._loadDone = function(data) {
 }
 
 MM.UI.Backend.File._saveDone = function(data){
-	this._filePath = data.filePath;
+	if(MM.App.electronVer)
+		this._filePath = data.filePath;
 	this._mode = "";
 	MM.UI.Backend._saveDone.call(this);
 }
@@ -5447,6 +5458,7 @@ MM.App = {
 	},
 
 	init: function() {
+		this.electronVer = window && window.process && window.process.versions && window.process.versions['electron'];
 		this._port = document.querySelector("#port");
 		this._throbber = document.querySelector("#throbber");
 		this.ui = new MM.UI();

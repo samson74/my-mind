@@ -141,6 +141,7 @@ MM.App = {
 	},
 
 	init: function() {
+		this.electronVer = window && window.process && window.process.versions && window.process.versions['electron'];
 		this._port = document.querySelector("#port");
 		this._throbber = document.querySelector("#throbber");
 		this.ui = new MM.UI();
